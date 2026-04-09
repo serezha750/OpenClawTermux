@@ -15,6 +15,7 @@ deb() { proot-distro login debian -- bash -lc "$*"; }
 
 export DEBIAN_FRONTEND=noninteractive
 TERMUX_HOME="/data/data/com.termux/files/home"
+PREFIX="/data/data/com.termux/files/usr"
 
 # ---------- Termux 基础设置 ----------
 section "请求存储访问权限（设备上可能会弹出提示）"
@@ -30,8 +31,9 @@ pkg install -y termux-api || true
 
 # ---------- Debian (proot, 最小化) ----------
 section "检查 Debian proot-distro 是否已安装"
-if proot-distro list | grep -q "^debian"; then
-    echo "Debian 已安装，跳过安装步骤。"
+DEBIAN_ROOTFS="$PREFIX/var/lib/proot-distro/installed-rootfs/debian"
+if [ -d "$DEBIAN_ROOTFS" ]; then
+    echo "Debian 已安装（检测到目录 $DEBIAN_ROOTFS），跳过安装步骤。"
 else
     section "安装 Debian proot-distro（最小化基础系统）"
     proot-distro install debian || die "Debian 安装失败"
