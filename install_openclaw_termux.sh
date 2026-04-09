@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # install_openclaw_debian.sh
-# 功能：配置 Termux + Debian 12 (bookworm, 最小化)、Node.js 22、OpenClaw 及 Node 劫持垫片。
+# 功能：配置 Termux + Debian 13 (trixie, 最小化)、Node.js 22、OpenClaw 及 Node 劫持垫片。
 # 最终运行：`openclaw onboard` 然后 `openclaw gateway --verbose`。
 # 安全重复运行，已安装的组件会自动跳过。
 
@@ -39,14 +39,14 @@ else
     proot-distro install debian || die "Debian 安装失败"
 fi
 
-# ---------- 强制配置 Debian 12 (bookworm) 清华源（覆盖任何已有配置，防止混源） ----------
-section "强制配置 Debian 12 (bookworm) 清华源（清除可能存在的 testing/unstable 源）"
+section "配置 Debian 13 (trixie) 清华源"
 deb "cat > /etc/apt/sources.list << 'EOF'
-deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware
-deb https://mirrors.tuna.tsinghua.edu.cn/debian-security bookworm-security main contrib non-free non-free-firmware
+deb https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie main contrib non-free non-free-firmware
+deb https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie-updates main contrib non-free non-free-firmware
+deb https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie-backports main contrib non-free non-free-firmware
+deb https://security.debian.org/debian-security trixie-security main contrib non-free non-free-firmware
 EOF"
 
-# ---------- 修复可能的依赖损坏，并确保所有包来自 bookworm ----------
 section "修复 Debian 包依赖冲突（如有）"
 deb "apt --fix-broken install -y || true"
 deb "apt dist-upgrade -y --allow-downgrades"
@@ -55,14 +55,12 @@ section "更新 Debian 软件源并升级所有包"
 deb "apt update"
 deb "apt -y upgrade"
 
-# ---------- 安装基础工具（拆分为两步，避免元包依赖冲突） ----------
 section "安装基础网络工具（curl git ca-certificates）"
 deb "apt install -y --no-install-recommends curl git ca-certificates"
 
 section "安装构建工具（gcc, g++, make, libc6-dev）"
 deb "apt install -y --no-install-recommends gcc g++ make libc6-dev"
 
-# ---------- 通过 NodeSource 安装 Node.js 22 ----------
 section "检查 Node.js 是否已安装且版本为 22.x"
 if deb "command -v node >/dev/null 2>&1 && node -v 2>/dev/null | grep -q '^v22'"; then
     NODE_VERSION=$(deb "node -v 2>/dev/null" || echo "未知")
@@ -83,7 +81,6 @@ else
     deb "npm install -g openclaw@latest"
 fi
 
-# ---------- 劫持垫片 ----------
 section "检查 Node.js 劫持垫片是否已配置"
 HIJACK_JS_EXISTS=false
 if deb "[ -f /root/hijack.js ]"; then
@@ -110,7 +107,6 @@ EOF'
     fi
 fi
 
-# ---------- 最终步骤 ----------
 section "运行 OpenClaw 初始化向导"
 deb "openclaw onboard || true"
 
